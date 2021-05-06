@@ -97,14 +97,8 @@ def post_cw_activities(activities, todos):
                }
         r = requests.post(cwurl, headers=cwheaders, json=data)
 
-'''
-token = get_token()
-todos = get_personal_todos(token)
-activities = get_cw_active_activities()
-post_cw_activities(activities, todos)
-'''
 
 token = get_token()
 tt_ids = get_tt_userids(token)
-todos = get_personal_todos(token, tt_ids)
+todos = get_tt_todos(token, tt_ids)
 print(todos)
