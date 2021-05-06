@@ -46,7 +46,7 @@ def get_tt_userids(token):
     tt_userids = [{"name": shorten_name(user['Name']), "ttid": user['Id']} for user in r]
     return tt_userids
 
-def get_personal_todos(token, tt_dict):
+def get_tt_todos(token, tt_dict):
     bearer_token = f'Bearer {token}'
     headers = {'Accept': 'application/json',
                'Authorization': bearer_token
@@ -91,12 +91,11 @@ def post_cw_activities(activities, todos):
            }
     '''
     for todo in todos:
-        if "CW" in todo[:2] and todo not in activities:
-            data = {"company": {"id": 2},
-                    "name": todo,
-                    "assignTo": {"id": 401}
-                   }
-            r = requests.post(cwurl, headers=cwheaders, json=data)
+        data = {"company": {"id": 2},
+                "name": todo,
+                "assignTo": {"id": 401}
+               }
+        r = requests.post(cwurl, headers=cwheaders, json=data)
 
 '''
 token = get_token()
