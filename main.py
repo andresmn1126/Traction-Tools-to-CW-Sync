@@ -3,7 +3,6 @@ import json
 import base64
 import datetime
 
-from requests.api import head
 from helper import shorten_name
 
 with open('creds.json') as json_creds:
@@ -56,7 +55,7 @@ def get_tt_todos(token, tt_dict):
         if user['name'] == 'amartinez':
             url = f"https://traction.tools/api/v1/todo/user/{user.get('ttid')}"
             r = requests.get(url, headers=headers).json()
-            todos = [todo['Name'] for todo in r if 'CW' in todo['Name'][:2]]
+            todos = [todo['Name'] for todo in r if 'CW -' in todo['Name'][:4]]
             user['todos'] = todos
             all_todos.append(user)
     return all_todos        
@@ -73,7 +72,7 @@ def get_cw_members():
 def get_cw_active_activities():
     endpoint = "/sales/activities"
     params = {"fields": "name",
-              "conditions": "status/name='Open' AND assignTo/name='Andres Martinez'",
+              "conditions": "status/name='Open' AND name contains 'CW -'",
               "pageSize": 1000,
               "page": 1
              }
@@ -90,15 +89,20 @@ def post_cw_activities(activities, todos):
             "contact": {"id": 401}
            }
     '''
-    for todo in todos:
-        data = {"company": {"id": 2},
-                "name": todo,
-                "assignTo": {"id": 401}
-               }
-        r = requests.post(cwurl, headers=cwheaders, json=data)
+    endpoint = "/sales/activities"
+    for user in todos:
+        for todo in user['todos']:
+            if todo not in activities:
+                data = {"company": {"id": 2},
+                        "name": todo,
+                        "assignTo": {"id": 401}
+                       }
+                r = requests.post(cwurl + endpoint, headers=cwheaders, json=data)
+                return r
 
 
 token = get_token()
 tt_ids = get_tt_userids(token)
 todos = get_tt_todos(token, tt_ids)
-print(todos)
+activities = get_cw_active_activities()
+print(post_cw_activities(activities, todos))
