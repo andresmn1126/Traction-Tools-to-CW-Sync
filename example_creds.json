@@ -1,4 +1,9 @@
 {
-    "traction_user":"username",
-    "traction_pass":"password"
+    "TT_USER":"username",
+    "TT_PASS":"password",
+    "CW_PRIVATEKEY":"privatekey",
+    "CW_PUBLICKEY":"publickey",
+    "CW_COMPANYID":"CompanyID",
+    "CW_CLIENTID":"ClientID",
+    "CW_URL":"https://domain.com/v4_6_release/apis/3.0"
 }
