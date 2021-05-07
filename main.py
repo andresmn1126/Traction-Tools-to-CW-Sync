@@ -1,9 +1,7 @@
 import requests
 import json
 import base64
-import datetime
-
-from helper import shorten_name
+from helper import shorten_name, turn_to_lower
 
 with open('creds.json') as json_creds:
     creds = json.load(json_creds)
@@ -66,7 +64,7 @@ def get_cw_members():
               "field": "id,identifier"
              }
     r = requests.get(cwurl + endpoint, params=params, headers=cwheaders).json()
-    cw_members = [{"name": member['identifier'], "cwid": member['id']} for member in r]
+    cw_members = [{"name": turn_to_lower(member['identifier']), "cwid": member['id']} for member in r]
     return cw_members
 
 def get_cw_active_activities():
@@ -74,7 +72,6 @@ def get_cw_active_activities():
     params = {"fields": "name",
               "conditions": "status/name='Open' AND name contains 'CW -'",
               "pageSize": 1000,
-              "page": 1
              }
     r = requests.get(cwurl + endpoint, headers=cwheaders, params=params).json()
    #return [a['name'] for a in r]
