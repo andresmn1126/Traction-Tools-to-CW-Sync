@@ -1,13 +1,13 @@
 import requests
 import json
 import base64
-from helper import shorten_name, turn_to_lower
+from helper import shorten_name, turn_to_lower, merge_list_of_dicts
 
 with open('creds.json') as json_creds:
     creds = json.load(json_creds)
 
 
-## CW realated auth info
+## CW related auth info
     cwurl = creds.get('CW_URL')
     cwclient_id = creds.get('CW_CLIENTID')
     cwpubkey = creds.get('CW_PUBLICKEY')
@@ -37,7 +37,7 @@ def get_tt_userids(token):
     url = "https://traction.tools/api/v1/users/mineviewable"
     bearer_token = f'Bearer {token}'
     headers = {'Accept': 'application/json',
-               'Authorization':bearer_token
+               'Authorization': bearer_token
                }
     r = requests.get(url, headers=headers).json()
     tt_userids = [{"name": shorten_name(user['Name']), "ttid": user['Id']} for user in r]
@@ -50,12 +50,11 @@ def get_tt_todos(token, tt_dict):
                }
     all_todos = []
     for user in tt_dict:
-        if user['name'] == 'amartinez':
-            url = f"https://traction.tools/api/v1/todo/user/{user.get('ttid')}"
-            r = requests.get(url, headers=headers).json()
-            todos = [todo['Name'] for todo in r if 'CW -' in todo['Name'][:4]]
-            user['todos'] = todos
-            all_todos.append(user)
+        url = f"https://traction.tools/api/v1/todo/user/{user.get('ttid')}"
+        r = requests.get(url, headers=headers).json()
+        todos = [{'name': todo['Name'], 'due': todo['DueDate']} for todo in r if 'CW -' in todo['Name'][:4]]
+        user['todos'] = todos
+        all_todos.append(user)
     return all_todos        
 
 def get_cw_members():
@@ -67,39 +66,34 @@ def get_cw_members():
     cw_members = [{"name": turn_to_lower(member['identifier']), "cwid": member['id']} for member in r]
     return cw_members
 
-def get_cw_active_activities():
+def get_cw_active_activities(id):
     endpoint = "/sales/activities"
     params = {"fields": "name",
-              "conditions": "status/name='Open' AND name contains 'CW -'",
+              "conditions": f"status/name='Open' AND assignTo/id={id}",
               "pageSize": 1000,
              }
     r = requests.get(cwurl + endpoint, headers=cwheaders, params=params).json()
-   #return [a['name'] for a in r]
     return [activity['name'] for activity in r]
 
-def post_cw_activities(activities, todos):
-    '''
-    data = {"company": {"id": 2},
-            "name": "Python Test",
-            "id" : 0,
-            "assignTo": {"id": 401},
-            "contact": {"id": 401}
-           }
-    '''
+def post_cw_activities(todos):
     endpoint = "/sales/activities"
     for user in todos:
+        activities = get_cw_active_activities(user['cwid'])
         for todo in user['todos']:
-            if todo not in activities:
+            if todo['name'] not in activities:
                 data = {"company": {"id": 2},
-                        "name": todo,
-                        "assignTo": {"id": 401}
+                        "name": todo['name'],
+                        "assignTo": {"id": user['cwid']},
+                        "notes": f"Marked as due on {todo['due']}"
                        }
                 r = requests.post(cwurl + endpoint, headers=cwheaders, json=data)
-                return r
+                print(r.status_code)
 
 
-token = get_token()
-tt_ids = get_tt_userids(token)
-todos = get_tt_todos(token, tt_ids)
-activities = get_cw_active_activities()
-print(post_cw_activities(activities, todos))
+if __name__ == "__main__":
+    token = get_token()
+    cw_ids = get_cw_members()
+    tt_ids = get_tt_userids(token)
+    combined_ids = merge_list_of_dicts(tt_ids, cw_ids)
+    todos = get_tt_todos(token, combined_ids)
+    post_cw_activities(todos)
