@@ -52,7 +52,7 @@ def get_tt_todos(token, tt_dict):
     for user in tt_dict:
         url = f"https://traction.tools/api/v1/todo/user/{user.get('ttid')}"
         r = requests.get(url, headers=headers).json()
-        todos = [{'name': todo['Name'], 'due': todo['DueDate']} for todo in r if 'CW -' in todo['Name'][:4]]
+        todos = [{'name': todo['Name'], 'due': todo['DueDate']} for todo in r if 'CW -' in todo['Name'][:4] and todo['Complete'] == False]
         user['todos'] = todos
         all_todos.append(user)
     return all_todos        
