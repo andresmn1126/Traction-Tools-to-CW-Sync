@@ -22,7 +22,7 @@ with open('creds.json') as json_creds:
  
 
 def get_token():
-    url = "https://traction.tools\Token"
+    url = "https://traction.tools/Token"
     headers = {'Content-type': 'application/x-www-form-urlencoded'}
     data = {'grant_type': 'password', 
             'userName': creds.get('TT_USER'), 
